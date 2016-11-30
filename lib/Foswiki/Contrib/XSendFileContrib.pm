@@ -1,6 +1,6 @@
 # Module of Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2013-2015 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2016 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -23,9 +23,10 @@ use Foswiki::Sandbox ();
 use Foswiki::Func ();
 use Foswiki::Time ();
 use File::MMagic ();
+use File::Spec ();
 
-our $VERSION = '4.00';
-our $RELEASE = '17 Jul 2015';
+our $VERSION = '5.00';
+our $RELEASE = '30 Nov 2016';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
@@ -33,7 +34,7 @@ our $mmagic;
 sub _decodeUntaint {
   my ($text, $sub) = @_;
 
-  $text = Encode::decode_utf8($text);
+  $text = Encode::decode_utf8($text) if $Foswiki::UNICODE;
   $text = Foswiki::Sandbox::untaint($text, $sub) if $sub;
 
   return $text;
@@ -45,12 +46,27 @@ sub xsendfile {
   my $request = $session->{request};
   my $response = $session->{response};
 
+  # remove cookie
+  $response->cookies([]);
+
   my $web = $session->{webName};
   my $topic = $session->{topicName};
   my $fileName = $request->param('filename');
-  my $dispositionMode = $request->param('mode') || 'inline'; 
 
   my $pathInfo = $request->path_info();
+  my $pathPrefix = "";
+
+  my $headerName = $Foswiki::cfg{XSendFileContrib}{Header} || 'X-LIGHTTPD-send-file';
+  my $location = $Foswiki::cfg{XSendFileContrib}{Location} || $Foswiki::cfg{PubDir};
+  my $fileLocation;
+
+  my $filePath;
+  my $foundOnDisk = 0;
+
+  if (defined $Foswiki::cfg{XSendFileContrib}{PathPrefix} && $pathInfo =~ s/^($Foswiki::cfg{XSendFileContrib}{PathPrefix})//) {
+    $pathPrefix = $1;
+  }
+
   my @path = split(/\/+/, $pathInfo);
   shift(@path) unless $path[0];
 
@@ -65,6 +81,7 @@ sub xsendfile {
   }
 
   $web = join('/', @web);
+
   unless ($web) {
     $response->status(404);
     $response->print("404 - no web found\n");
@@ -78,6 +95,21 @@ sub xsendfile {
   # The next element on the path has to be the topic name
   $topic = _decodeUntaint(shift @path, \&Foswiki::Sandbox::validateTopicName);
 
+  # check whether this is a file already
+  $filePath = File::Spec->catfile("/", $Foswiki::cfg{PubDir}, $pathPrefix, $web, $topic);
+  if (-f $filePath) {
+    $foundOnDisk = 1;
+    $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic;
+
+    # test for a file extension, e.g. System/WebHome.html
+    if ($topic =~ /^(.*)\.([^\.]+)$/) {
+      $fileName = $topic;
+      $topic = $1;
+    } else {
+      $fileName = $topic;
+    }
+  }
+
   unless ($topic) {
     $response->status(404);
     $response->print("404 - no topic found\n");
@@ -89,9 +121,18 @@ sub xsendfile {
 
   unless (defined $fileName) {
     # What's left in the path is the attachment name.
-    $fileName = join('/', @path);
+    $fileName = File::Spec->catfile(@path);
   } else {
     $fileName = Foswiki::urlDecode($fileName);
+  }
+
+  # check whether this is a file already
+  if (!$foundOnDisk && $fileName) {
+    $filePath = File::Spec->catfile("/", $Foswiki::cfg{PubDir}, $pathPrefix, $web, $topic, $fileName);
+    if (-f $filePath) {
+      $foundOnDisk = 1;
+      $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName;
+    }
   }
 
   # not found
@@ -105,25 +146,24 @@ sub xsendfile {
 
   #print STDERR "web=$web, topic=$topic, fileName=$fileName\n";
 
-  # invalid 
+  # invalid
   unless (defined $fileName) {
     $response->status(404);
     $response->print("404 - file not valid\n");
     return;
   }
 
-  my $topicObject = Foswiki::Meta->new($session, $web, $topic);
+  my $topicObject = Foswiki::Meta->load($session, $web, $topic);
 
   # not found
-  unless ($topicObject->existsInStore()) {
+  if (!$foundOnDisk && !$topicObject->existsInStore()) {
     $response->status(404);
     $response->print("404 - topic $web.$topic does not exist\n");
     return;
   }
 
   # not found
-  
-  unless ($topicObject->hasAttachment($fileName)) {
+  if (!$foundOnDisk && !$topicObject->hasAttachment($fileName)) {
     $response->status(404);
     $response->print("404 - attachment $fileName not found at $web.$topic\n");
     return;
@@ -136,36 +176,57 @@ sub xsendfile {
     return;
   }
 
-  # construct file path to protected location
-  my $location = $Foswiki::cfg{XSendFileContrib}{Location} || $Foswiki::cfg{PubDir};
-  my $fileLocation = $location.'/'.$web.'/'.$topic.'/'.$fileName;
-  my $filePath = $Foswiki::cfg{PubDir}.'/'.$web.'/'.$topic.'/'.$fileName;
+  # check whether we can return a 304 not modified
+  $filePath = File::Spec->catfile($Foswiki::cfg{PubDir}, $pathPrefix, $web, $topic, $fileName)
+    unless defined $filePath;
+
   my @stat = stat($filePath);
   my $lastModified = Foswiki::Time::formatTime($stat[9] || $stat[10] || 0, '$http', 'gmtime');
   my $ifModifiedSince = $request->header('If-Modified-Since') || '';
-
-  my $headerName = $Foswiki::cfg{XSendFileContrib}{Header} || 'X-LIGHTTPD-send-file';
-
-  unless ($Foswiki::UNICODE) {
-    $fileName = Encode::encode_utf8($fileName);
-    $fileLocation = Encode::encode_utf8($fileLocation);
-  }
+  my $mimeType = mimeTypeOfFile($fileName);
 
   if ($lastModified eq $ifModifiedSince) {
-    $response->header(
-      -status => 304,
-    );
+    $response->header(-status => 304,);
+    return;
+  }
+
+  # check for rev parameter and fallback if not current
+  my $rev = $request->param('rev');
+  if (defined $rev) {
+
+    my $fileMeta = $topicObject->get('FILEATTACHMENT', $fileName);
+    if ($fileMeta && $fileMeta->{version} > $rev) {
+
+      $session->{response}->header(
+        -status => 200,
+        -type => $mimeType,
+        -content_disposition => "inline; filename=\"$fileName\"",
+        -last_modified => $lastModified,
+      );
+
+      my $fh = $topicObject->openAttachment($fileName, '<', version => $rev);
+      $session->{response}->body(<$fh>);
+    }
   } else {
+  
+    my $dispositionMode = $request->param('disposition');
+
+    unless (defined $dispositionMode) {
+      # SMELL: Force office documents into a save-as-dialog using "attachment".
+      # this is mostly needed for Internet Explorers as other browser do just fine with those type of files in "inline" mode...
+      $dispositionMode = ($fileName =~ /(?:(?:(?:xlt|xls|csv|ppt|pps|pot|doc|dot)(x|m)?)|odc|odb|odf|odg|otg|odi|odp|otp|ods|ots|odt|odm|ott|oth|mpp|rtf|txt|vsd)$/)?"attachment":"inline";
+    }
+
+    $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName unless defined $fileLocation;
+
     $response->header(
       -status => 200,
-      -type => mimeTypeOfFile($filePath),
+      -type => $mimeType,
       -content_disposition => "$dispositionMode; filename=\"$fileName\"",
       -last_modified => $lastModified,
       $headerName => $fileLocation,
     );
   }
-
-  #  $response->print("OK");
 
   return;
 }
@@ -189,6 +250,7 @@ sub checkAccess {
   } 
 
   # fallback
+  #print STDERR "checking ACLS for user $user\n";
   return $topicObject->haveAccess("VIEW", $user);
 }
 

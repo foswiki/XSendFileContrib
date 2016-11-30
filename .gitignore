@@ -1,8 +1,8 @@
 *.swp
-XSendFileContrib.md5
-XSendFileContrib.sha1
-XSendFileContrib.tgz
-XSendFileContrib.txt
-XSendFileContrib.zip
-XSendFileContrib_installer
-XSendFileContrib_installer.pl
+/XSendFileContrib.md5
+/XSendFileContrib.sha1
+/XSendFileContrib.tgz
+/XSendFileContrib.txt
+/XSendFileContrib.zip
+/XSendFileContrib_installer
+/XSendFileContrib_installer.pl
