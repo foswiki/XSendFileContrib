@@ -1,3 +1,4 @@
+!noci
 bin/xsendfile 0755
 data/System/XSendFileContrib.txt 0644
 lib/Foswiki/Contrib/XSendFileContrib/Config.spec 0644

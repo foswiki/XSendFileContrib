@@ -1,6 +1,6 @@
-# Module of Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+# Module of Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
-# Copyright (C) 2013-2016 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2017 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -25,8 +25,8 @@ use Foswiki::Time ();
 use File::MMagic ();
 use File::Spec ();
 
-our $VERSION = '5.00';
-our $RELEASE = '30 Nov 2016';
+our $VERSION = '5.01';
+our $RELEASE = '25 Sep 2017';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
@@ -214,7 +214,7 @@ sub xsendfile {
     unless (defined $dispositionMode) {
       # SMELL: Force office documents into a save-as-dialog using "attachment".
       # this is mostly needed for Internet Explorers as other browser do just fine with those type of files in "inline" mode...
-      $dispositionMode = ($fileName =~ /(?:(?:(?:xlt|xls|csv|ppt|pps|pot|doc|dot)(x|m)?)|odc|odb|odf|odg|otg|odi|odp|otp|ods|ots|odt|odm|ott|oth|mpp|rtf|txt|vsd)$/)?"attachment":"inline";
+      $dispositionMode = ($fileName =~ /(?:(?:(?:xlt|xls|csv|ppt|pps|pot|doc|dot)(x|m)?)|odc|odb|odf|odg|otg|odi|odp|otp|ods|ots|odt|odm|ott|oth|mpp|rtf|vsd)$/)?"attachment":"inline";
     }
 
     $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName unless defined $fileLocation;

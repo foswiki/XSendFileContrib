@@ -114,6 +114,7 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 ---++ Change History
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  25 Sep 2017 | remove txt files from default dispositioning |
 |  30 Nov 2016 | fixed encoding under Foswiki-2.x; \
                  detect 404 file not found properly; \
                  added support for rev parameter to access previous versions of an attachment; \
@@ -131,7 +132,7 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 %META:FORM{name="PackageForm"}%
 %META:FIELD{name="Author" title="Author" value="Michael Daum"}%
-%META:FIELD{name="Copyright" title="Copyright" value="2013-2016, Michael Daum http://michaeldaumconsulting.com"}%
+%META:FIELD{name="Copyright" title="Copyright" value="2013-2017, Michael Daum http://michaeldaumconsulting.com"}%
 %META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
 %META:FIELD{name="Home" title="Home" value="https://foswiki.org/Extensions/%TOPIC%"}%
 %META:FIELD{name="License" title="License" value="GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]])"}%
