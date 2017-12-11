@@ -114,6 +114,8 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 ---++ Change History
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  11 Dec 2017 | return correct http error code when not authorized to access an attachment; \
+                 optionally redirect to a login in case of an unauthorized access |
 |  25 Sep 2017 | remove txt files from default dispositioning |
 |  30 Nov 2016 | fixed encoding under Foswiki-2.x; \
                  detect 404 file not found properly; \

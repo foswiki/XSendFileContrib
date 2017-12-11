@@ -24,9 +24,11 @@ use Foswiki::Func ();
 use Foswiki::Time ();
 use File::MMagic ();
 use File::Spec ();
+use Error qw( :try );
+use Foswiki::AccessControlException ();
 
-our $VERSION = '5.01';
-our $RELEASE = '25 Sep 2017';
+our $VERSION = '5.10';
+our $RELEASE = '11 Dec 2017';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
@@ -171,8 +173,12 @@ sub xsendfile {
 
   # unauthorized
   unless (checkAccess($topicObject, $fileName, $session->{user})) {
-    $response->status(401);
-    $response->print("401 - access denied\n");
+    if ($Foswiki::cfg{XSendFileContrib}{RedirectToLoginOnAccessDenied}) {
+      throw Foswiki::AccessControlException("VIEW", $session->{user}, $web, $topic, "access denied");
+    } else {
+      $response->status(403);
+      $response->print("403 - access denied\n");
+    }
     return;
   }
 
