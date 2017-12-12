@@ -27,8 +27,8 @@ use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '5.20';
-our $RELEASE = '11 Dec 2017';
+our $VERSION = '5.21';
+our $RELEASE = '12 Dec 2017';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
