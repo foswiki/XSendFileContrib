@@ -74,7 +74,7 @@ $Foswiki::cfg{XSendFileContrib}{AccessRules} = [
   },
 ];
 
-# **BOOLEAN LABEL="Force Default Url Host"**
+# **BOOLEAN LABEL="Redirect to Login on access denied"**
 # Redirect to a login screen or return a plain 401 access denied in case of missing access rights.
 # It is recommended to set this to FALSE on public sites to ease the load by web crawlers. Set this
 # to TRUE if you want people to log in when accessing a view restricted file shared via email.
