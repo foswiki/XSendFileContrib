@@ -114,6 +114,8 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 ---++ Change History
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  12 Dec 2017 | fixed content encoding of a 403 warning; \
+                 made file extension configurable that must be delivered in an "attachment" disposition mode |
 |  11 Dec 2017 | return correct http error code when not authorized to access an attachment; \
                  optionally redirect to a login in case of an unauthorized access |
 |  25 Sep 2017 | remove txt files from default dispositioning |

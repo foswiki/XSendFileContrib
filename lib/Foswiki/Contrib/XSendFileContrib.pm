@@ -27,7 +27,7 @@ use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '5.10';
+our $VERSION = '5.20';
 our $RELEASE = '11 Dec 2017';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
@@ -176,6 +176,7 @@ sub xsendfile {
     if ($Foswiki::cfg{XSendFileContrib}{RedirectToLoginOnAccessDenied}) {
       throw Foswiki::AccessControlException("VIEW", $session->{user}, $web, $topic, "access denied");
     } else {
+      $response->header(-type => 'text/plain; charset=utf-8');
       $response->status(403);
       $response->print("403 - access denied\n");
     }
@@ -203,7 +204,7 @@ sub xsendfile {
     my $fileMeta = $topicObject->get('FILEATTACHMENT', $fileName);
     if ($fileMeta && $fileMeta->{version} > $rev) {
 
-      $session->{response}->header(
+      $response->header(
         -status => 200,
         -type => $mimeType,
         -content_disposition => "inline; filename=\"$fileName\"",
@@ -211,16 +212,17 @@ sub xsendfile {
       );
 
       my $fh = $topicObject->openAttachment($fileName, '<', version => $rev);
-      $session->{response}->body(<$fh>);
+      $response->body(<$fh>);
     }
   } else {
   
     my $dispositionMode = $request->param('disposition');
 
     unless (defined $dispositionMode) {
-      # SMELL: Force office documents into a save-as-dialog using "attachment".
-      # this is mostly needed for Internet Explorers as other browser do just fine with those type of files in "inline" mode...
-      $dispositionMode = ($fileName =~ /(?:(?:(?:xlt|xls|csv|ppt|pps|pot|doc|dot)(x|m)?)|odc|odb|odf|odg|otg|odi|odp|otp|ods|ots|odt|odm|ott|oth|mpp|rtf|vsd)$/)?"attachment":"inline";
+      my $defaultAttachmentDispositionFiles = $Foswiki::cfg{XSendFileContrib}{DefaultAttachmentDispositionFiles}
+        || '(?:(?:(?:xlt|xls|csv|ppt|pps|pot|doc|dot)(x|m)?)|odc|odb|odf|odg|otg|odi|odp|otp|ods|ots|odt|odm|ott|oth|mpp|rtf|vsd)$';
+
+      $dispositionMode = ($fileName =~ /$defaultAttachmentDispositionFiles/) ? "attachment" : "inline";
     }
 
     $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName unless defined $fileLocation;
