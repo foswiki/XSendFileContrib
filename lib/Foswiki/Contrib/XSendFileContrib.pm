@@ -1,6 +1,6 @@
 # Module of Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
-# Copyright (C) 2013-2017 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2018 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,8 +27,8 @@ use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '5.21';
-our $RELEASE = '12 Dec 2017';
+our $VERSION = '5.22';
+our $RELEASE = '11 Jun 2018';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
@@ -173,12 +173,13 @@ sub xsendfile {
 
   # unauthorized
   unless (checkAccess($topicObject, $fileName, $session->{user})) {
+    my $reason = $session->access->getReason();
     if ($Foswiki::cfg{XSendFileContrib}{RedirectToLoginOnAccessDenied}) {
-      throw Foswiki::AccessControlException("VIEW", $session->{user}, $web, $topic, "access denied");
+      throw Foswiki::AccessControlException("VIEW", $session->{user}, $web, $topic, "access denied - $reason");
     } else {
       $response->header(-type => 'text/plain; charset=utf-8');
       $response->status(403);
-      $response->print("403 - access denied\n");
+      $response->print("403 - access denied - $reason\n");
     }
     return;
   }

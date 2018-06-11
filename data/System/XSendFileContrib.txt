@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="" date="1437154671" format="1.1"  version="1"}%
+%META:TOPICINFO{author="ProjectContributor" comment="" date="1528725816" format="1.1"  version="1"}%
 ---+!! %TOPIC%
 %FORMFIELD{"Description"}%
 
@@ -114,6 +114,7 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 ---++ Change History
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  11 Jun 2018 | display reason why access to a file was denied |
 |  12 Dec 2017 | fixed content encoding of a 403 warning; \
                  made file extension configurable that must be delivered in an "attachment" disposition mode |
 |  11 Dec 2017 | return correct http error code when not authorized to access an attachment; \
@@ -136,7 +137,7 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 %META:FORM{name="PackageForm"}%
 %META:FIELD{name="Author" title="Author" value="Michael Daum"}%
-%META:FIELD{name="Copyright" title="Copyright" value="2013-2017, Michael Daum http://michaeldaumconsulting.com"}%
+%META:FIELD{name="Copyright" title="Copyright" value="2013-2018, Michael Daum http://michaeldaumconsulting.com"}%
 %META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
 %META:FIELD{name="Home" title="Home" value="https://foswiki.org/Extensions/%TOPIC%"}%
 %META:FIELD{name="License" title="License" value="GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]])"}%

@@ -63,13 +63,10 @@ $Foswiki::cfg{XSendFileContrib}{AccessRules} = [
       web => "Sandbox",
       topic => "TestUpload",
       file => ".*\.pdf",
-
       requiredAccess => "CHANGE",
   },
   {
-
-      file => "igp_.*\.[png|gif|jpe?g|bmp|tiff]",
-
+      file => "igp_.*",
       requiredAccess => "",
   },
 ];
