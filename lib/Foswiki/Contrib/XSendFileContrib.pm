@@ -1,6 +1,6 @@
 # Module of Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
-# Copyright (C) 2013-2018 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2020 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -27,8 +27,8 @@ use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '5.22';
-our $RELEASE = '11 Jun 2018';
+our $VERSION = '6.00';
+our $RELEASE = '20 Oct 2020';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
@@ -43,13 +43,12 @@ sub _decodeUntaint {
 }
 
 sub xsendfile {
-
   my $session = shift;
   my $request = $session->{request};
   my $response = $session->{response};
 
   # remove cookie
-  $response->cookies([]);
+  #$response->cookies([]);
 
   my $web = $session->{webName};
   my $topic = $session->{topicName};
@@ -59,7 +58,6 @@ sub xsendfile {
   my $pathPrefix = "";
 
   my $headerName = $Foswiki::cfg{XSendFileContrib}{Header} || 'X-LIGHTTPD-send-file';
-  my $location = $Foswiki::cfg{XSendFileContrib}{Location} || $Foswiki::cfg{PubDir};
   my $fileLocation;
 
   my $filePath;
@@ -87,6 +85,7 @@ sub xsendfile {
   unless ($web) {
     $response->status(404);
     $response->print("404 - no web found\n");
+    writeEvent("no web found");
     return;
   }
 
@@ -98,23 +97,26 @@ sub xsendfile {
   $topic = _decodeUntaint(shift @path, \&Foswiki::Sandbox::validateTopicName);
 
   # check whether this is a file already
-  $filePath = File::Spec->catfile("/", $Foswiki::cfg{PubDir}, $pathPrefix, $web, $topic);
-  if (-f $filePath) {
-    $foundOnDisk = 1;
-    $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic;
+  if (defined $web && defined $topic) {
+    $filePath = File::Spec->catfile("/", $Foswiki::cfg{PubDir}, $pathPrefix, $web, $topic);
+    if (-f $filePath) {
+      $foundOnDisk = 1;
+      $fileLocation = $pathPrefix . '/' . $web . '/' . $topic;
 
-    # test for a file extension, e.g. System/WebHome.html
-    if ($topic =~ /^(.*)\.([^\.]+)$/) {
-      $fileName = $topic;
-      $topic = $1;
-    } else {
-      $fileName = $topic;
+      # test for a file extension, e.g. System/WebHome.html
+      if ($topic =~ /^(.*)\.([^\.]+)$/) {
+        $fileName = $topic;
+        $topic = $1;
+      } else {
+        $fileName = $topic;
+      }
     }
   }
 
-  unless ($topic) {
+  unless (defined $web && defined $topic) {
     $response->status(404);
     $response->print("404 - no topic found\n");
+    writeEvent("no topic found");
     return;
   }
 
@@ -133,7 +135,7 @@ sub xsendfile {
     $filePath = File::Spec->catfile("/", $Foswiki::cfg{PubDir}, $pathPrefix, $web, $topic, $fileName);
     if (-f $filePath) {
       $foundOnDisk = 1;
-      $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName;
+      $fileLocation = $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName;
     }
   }
 
@@ -141,6 +143,7 @@ sub xsendfile {
   if (!defined($fileName) || $fileName eq '') {
     $response->status(404);
     $response->print("404 - no file found\n");
+    writeEvent("no file found");
     return;
   }
 
@@ -152,6 +155,7 @@ sub xsendfile {
   unless (defined $fileName) {
     $response->status(404);
     $response->print("404 - file not valid\n");
+    writeEvent("file not valid");
     return;
   }
 
@@ -161,6 +165,7 @@ sub xsendfile {
   if (!$foundOnDisk && !$topicObject->existsInStore()) {
     $response->status(404);
     $response->print("404 - topic $web.$topic does not exist\n");
+    writeEvent("topic not found");
     return;
   }
 
@@ -168,6 +173,7 @@ sub xsendfile {
   if (!$foundOnDisk && !$topicObject->hasAttachment($fileName)) {
     $response->status(404);
     $response->print("404 - attachment $fileName not found at $web.$topic\n");
+    writeEvent("attachment $fileName not found", $filePath);
     return;
   }
 
@@ -181,6 +187,7 @@ sub xsendfile {
       $response->status(403);
       $response->print("403 - access denied - $reason\n");
     }
+    writeEvent("access denied", $filePath);
     return;
   }
 
@@ -195,6 +202,7 @@ sub xsendfile {
 
   if ($lastModified eq $ifModifiedSince) {
     $response->header(-status => 304,);
+    writeEvent($fileName, $filePath);
     return;
   }
 
@@ -226,7 +234,16 @@ sub xsendfile {
       $dispositionMode = ($fileName =~ /$defaultAttachmentDispositionFiles/) ? "attachment" : "inline";
     }
 
-    $fileLocation = $location . $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName unless defined $fileLocation;
+    $fileLocation = $pathPrefix . '/' . $web . '/' . $topic . '/' . $fileName unless defined $fileLocation;
+
+    my $location;
+    my ($ext) = $fileName =~ /\.(.*?)$/;
+
+    if (defined($ext) && defined($Foswiki::cfg{XSendFileContrib}{Locations}{$ext})) {
+      $location = $Foswiki::cfg{XSendFileContrib}{Locations}{$ext};
+    }
+    $location //= $Foswiki::cfg{XSendFileContrib}{Location} || $Foswiki::cfg{PubDir};
+    $fileLocation = $location . $fileLocation;
 
     $response->header(
       -status => 200,
@@ -235,9 +252,21 @@ sub xsendfile {
       -last_modified => $lastModified,
       $headerName => $fileLocation,
     );
+    $response->body("");
   }
 
+  writeEvent($fileName, $filePath);
+
   return;
+}
+
+sub writeEvent {
+  my ($msg, $filePath) = @_;
+
+  return if exists $Foswiki::cfg{Log}{Action}{xsendfile} && !$Foswiki::cfg{Log}{Action}{xsendfile};
+  return if $filePath && $Foswiki::cfg{XSendFileContrib}{ExcludeFromLogging} && $filePath =~ /$Foswiki::cfg{XSendFileContrib}{ExcludeFromLogging}/;
+
+  Foswiki::Func::writeEvent("xsendfile", $msg) 
 }
 
 sub checkAccess {
