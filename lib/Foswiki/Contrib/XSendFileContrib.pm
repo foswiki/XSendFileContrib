@@ -1,6 +1,6 @@
 # Module of Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
-# Copyright (C) 2013-2020 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2022 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -22,13 +22,13 @@ use Encode ();
 use Foswiki::Sandbox ();
 use Foswiki::Func ();
 use Foswiki::Time ();
-use File::MMagic ();
+use File::MMagic::XS qw(:compat);
 use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '6.00';
-our $RELEASE = '20 Oct 2020';
+our $VERSION = '7.00';
+our $RELEASE = '05 May 2022';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $mimeTypeInfo;
 our $mmagic;
@@ -198,7 +198,7 @@ sub xsendfile {
   my @stat = stat($filePath);
   my $lastModified = Foswiki::Time::formatTime($stat[9] || $stat[10] || 0, '$http', 'gmtime');
   my $ifModifiedSince = $request->header('If-Modified-Since') || '';
-  my $mimeType = mimeTypeOfFile($fileName);
+  my $mimeType = mimeTypeOfFile($filePath);
 
   if ($lastModified eq $ifModifiedSince) {
     $response->header(-status => 304,);
@@ -306,7 +306,7 @@ sub mimeTypeOfFile {
     }
   }
 
-  $mmagic = File::MMagic->new() unless defined $mmagic;
+  $mmagic = File::MMagic::XS->new() unless defined $mmagic;
 
   my $mimeType = $mmagic->checktype_filename($fileName);
 

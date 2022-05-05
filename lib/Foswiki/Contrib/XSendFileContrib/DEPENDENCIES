@@ -1,2 +1,2 @@
 Foswiki::Contrib::FastCGIEngineContrib,>=0.9.5,perl,Optional.
-File::MMagic,>0,cpan,Required.
+File::MMagic::XS,>0,cpan,Required.

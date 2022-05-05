@@ -2,5 +2,6 @@
 bin/xsendfile 0755
 data/System/XSendFileContrib.txt 0644
 lib/Foswiki/Contrib/XSendFileContrib/Config.spec 0644
+lib/Foswiki/Contrib/XSendFileContrib/DEPENDENCIES 0644
 lib/Foswiki/Contrib/XSendFileContrib.pm 0644
 tools/virtualhosts-xsendfile 0755

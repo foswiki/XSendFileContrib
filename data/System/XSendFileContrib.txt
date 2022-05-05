@@ -131,6 +131,7 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 ---++ Change History
 
 %TABLE{columnwidths="7em" tablewidth="100%"}%
+|  27 Sep 2021 | switched from File::MMagic to File::MMagic::XS for better performance |
 |  09 Oct 2020 | added ={Locations}= feature to be able to work around a bug in pdf.js not forwarding cookies in byte-range requests |
 |  11 Jun 2018 | display reason why access to a file was denied |
 |  12 Dec 2017 | fixed content encoding of a 403 warning; \
@@ -155,7 +156,7 @@ See https://tn123.org/mod_xsendfile/ for more information on how to compile =mod
 
 %META:FORM{name="PackageForm"}%
 %META:FIELD{name="Author" title="Author" value="Michael Daum"}%
-%META:FIELD{name="Copyright" title="Copyright" value="2013-2020, Michael Daum"}%
+%META:FIELD{name="Copyright" title="Copyright" value="2013-2021, Michael Daum"}%
 %META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
 %META:FIELD{name="Home" title="Home" value="https://foswiki.org/Extensions/%TOPIC%"}%
 %META:FIELD{name="License" title="License" value="GPL ([[http://www.gnu.org/copyleft/gpl.html][GNU General Public License]])"}%
