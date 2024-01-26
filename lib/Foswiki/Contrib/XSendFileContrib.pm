@@ -1,6 +1,6 @@
 # Module of Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
-# Copyright (C) 2013-2022 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2024 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -18,6 +18,7 @@ package Foswiki::Contrib::XSendFileContrib;
 
 use strict;
 use warnings;
+
 use Encode ();
 use Foswiki::Sandbox ();
 use Foswiki::Func ();
@@ -27,9 +28,10 @@ use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '7.00';
-our $RELEASE = '05 May 2022';
+our $VERSION = '7.01';
+our $RELEASE = '%$RELEASE%';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
+our $LICENSECODE = '%$LICENSECODE%';
 our $mimeTypeInfo;
 our $mmagic;
 

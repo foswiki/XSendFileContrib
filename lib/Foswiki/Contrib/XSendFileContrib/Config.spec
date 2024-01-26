@@ -73,14 +73,14 @@ $Foswiki::cfg{XSendFileContrib}{ExcludeFromLogging} = '.*/igp_.*';
 # unconditionally.
 $Foswiki::cfg{XSendFileContrib}{AccessRules} = [
   {
-      web => "Sandbox",
-      topic => "TestUpload",
-      file => ".*\.pdf",
-      requiredAccess => "CHANGE",
+      topic => "SitePreferences",
   },
   {
       file => "igp_.*",
   },
+  {
+      web => "System|Applications/?.*",
+  }
 ];
 
 # **BOOLEAN LABEL="Redirect to Login on access denied"**
