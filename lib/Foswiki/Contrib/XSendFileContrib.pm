@@ -1,6 +1,6 @@
 # Module of Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
-# Copyright (C) 2013-2024 Michael Daum http://michaeldaumconsulting.com
+# Copyright (C) 2013-2026 Michael Daum http://michaeldaumconsulting.com
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
@@ -28,7 +28,7 @@ use File::Spec ();
 use Error qw( :try );
 use Foswiki::AccessControlException ();
 
-our $VERSION = '7.01';
+our $VERSION = '7.02';
 our $RELEASE = '%$RELEASE%';
 our $SHORTDESCRIPTION = 'A viewfile replacement to send static files efficiently';
 our $LICENSECODE = '%$LICENSECODE%';
@@ -303,7 +303,7 @@ sub mimeTypeOfFile {
     $mimeTypeInfo = Foswiki::Func::readFile($Foswiki::cfg{MimeTypesFileName}) 
       unless defined $mimeTypeInfo;
 
-    if ($mimeTypeInfo =~ /^([^#]\S*).*?\s$suffix(?:\s|$)/im) {
+    if ($mimeTypeInfo =~ /^([^#]\S*).*?\s\Q$suffix\E(?:\s|$)/im) {
       return $1;
     }
   }
